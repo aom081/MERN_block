@@ -3,13 +3,19 @@ const cors = require("cors");
 const mongoose = require ("mongoose");
 require("dotenv").config();
 const User = require("./Models/User");
+const Post = require("./Models/Post");
 const bcrypt = require("bcryptjs"); 
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const uploadMiddleware = require ({dest: "upload/"});
+const fs = require("fs");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
 app.use(cors({credentials: true, origin: "http://localhost:5173"}));
 app.use(express.json());
+app.use(cookieParser);
 
 //Database
 const MOMGODB_URI = process.env.MOMGODB_URI;
@@ -61,6 +67,28 @@ app.post("/logout", (req,res) => {
     res.cookie("token","").json("ok");
 })
 
+//create Post
+app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
+    const {originalname, path} = req.file;
+    const parts = originalname.split(".");
+    const ext =parts[parts.length -1];
+    const newPath = path + "." + ext;
+    fs.renameSync(path,newPath);
+    const { token } = req.cookies;
+    jwt.verify(token, secret, async (err, info) => {
+        if (err) throw err;
+        const {title, summary, connect} = req.body;
+        const postDoc = await Post.create({
+            title,
+            summary,
+            connect,
+            cover: newPath,
+            author: info.id,
+        });
+        res.json(postDoc);
+    });
+    
+});
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
