@@ -1,29 +1,50 @@
-import React from 'react'
-import '../App.css'
+import { useState, useContext, useEffect } from 'react'
+import { UserContext } from "../context/UserContext"
+import { Link, useParams } from 'react-router-dom';
 
+const baseURL = import.meta.env.VITE_BASE_URL;
 const PostPage = () => {
+  const [postInfo, setPostInfo] = useState(null);
+  const { userInfo } = useContext(UserContext);
+  const { id } = useParams();
+
+  // Fetch the post information when the component mounts.
+  useEffect(() => {
+    fetch(`${baseURL}/posts/${id}`).then((response) => {
+      response.json().then((postInfo) => {
+        setPostInfo(postInfo);
+      });
+    });
+  }, [id]);
+
   return (
     <div className='post-page'>
-      <h1>
-        {" "}
-        การเดินทางตลอดหนึ่งปีที่ผ่านมา เราต้องเจอกับเรื่องราวมากมาย เผชิญหน้ากับเหตุการณ์ไม่คาดคิด และรับมือกับหลายความรู้สึกที่เกาะกุมอยู่ในใจ ด้วยเหตุนี้ ยิ่งใกล้ช่วงท้ายปี หลายคนเลยอยากปล่อยให้ ‘ปีเก่า’ เป็นเรื่องราวของ ‘ปีเก่า’ พร้อมทิ้งเรื่องราวเดิมๆ ไว้ข้างหลังและมุ่งหน้าสู่การเดินทางใหม่ที่กำลังจะมาถึง
+      <h1> {postInfo.title} </h1>
+      <time>{format(new Date(createdAt), "dd MMMM yyyy HH:MM")}</time>
+      <div className='author'> By @{postInfo.author.username}</div>
 
-แต่แทนที่จะโยนทิ้งและปล่อยให้เป็นเรื่องราวในอดีตเฉยๆ อย่าลืมว่าจริงๆ แล้วการเดินทางอันยาวนานตลอด 1 ปีที่ผ่านมาให้อะไรเรามากมาย  มาร่วมส่งท้ายปีเก่าด้วยการรู้จักตัวเอง ย้อนมองบทเรียน และรับกำลังใจดีๆ ผ่าน 12 บทความให้กำลังใจจาก Mission To The Moon
-
-ก่อนจะโอบรับการเดินทางครั้งใหม่ด้วยกำลังใจเต็มเปี่ยมไปด้วยกัน
-      </h1>
-      <time>12 December 2023 - 18.52</time>
-      <div className='author'>@nattavut</div>
+      {userInfo?.id === postInfo.author._id && (
+        <div className='edit-row' >
+          <Link className='edit-btn' to={`/edit/${postInfo._id}`}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none" viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round" 
+                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+            Edit Post
+          </Link>
+        </div>
+      )}
       <div className="image">
-        <img src="https://missiontothemoon.co/wp-content/uploads/2021/12/1920-12Quote-1-696x392.jpg.webp" alt="" />
+        <img src={`${baseURL}/${cover}`} alt="" />
       </div>
-      <div className="content">
-      “ร้องไห้ราวกับกำลังแตกสลายไปเลยก็ได้ แต่ทุกครั้งที่ระบายอารมณ์และพักจนพอใจแล้ว อย่าลืมว่าเราสามารถหยิบชิ้นส่วนที่กระจัดกระจายอยู่ มาประกอบร่างสร้างเป็นตัวเรา และใช้ชีวิตต่อไปได้อีกครั้ง”
-
-“เพราะเราไม่ชอบความเจ็บปวด เราเลยหลีกเลี่ยงที่จะรู้สึกถึงมันหากทำได้ แต่ในการบำบัดนั้น เราต้องวางเกราะป้องกันเหล่านี้ลงและทำความเข้าใจกับสาเหตุที่แท้จริง แม้จะเจ็บปวดแค่ไหนก็ตาม”
-
-สำรวจจิตใจอันซับซ้อนของมนุษย์ เข้าใจความเจ็บปวด เรียนรู้การระบายอารมณ์ เยียวยาตัวเอง และออกเดินทางตามหาความสุขกันใหม่ ไปพร้อมๆ กับ 10 ข้อคิดจากหนังสือ “Maybe You Should Talk to Someone
-      </div>
+      <div className="content" dangerouslySetInnerHTML={{ __html: postInfo.content }}></div>
     </div>
   )
 }
